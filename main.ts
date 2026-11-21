@@ -1,4 +1,4 @@
-// Build revision 2: verified output image buffer integrity
+// Build revision 2: enhanced buffer throughput verification
 import { copyFileSync, existsSync, mkdirSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
