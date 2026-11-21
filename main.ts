@@ -1,11 +1,51 @@
-// A working news-image-daily entry (Node 22, standard library only): its image is the entry.png beside this file, and
-// the program copies it to /output/entry.png. A starting point, not a winner: replace the image. The gate takes a
-// whole PNG or JPEG of at most 1 MiB and 1024 by 1024 pixels, and the judge sees exactly the bytes copied.
-//
-// Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for /output:
-//   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
+// Build revision 2: verified output image buffer integrity
+import { copyFileSync, existsSync, mkdirSync, statSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-import { copyFileSync } from 'node:fs';
-import { join } from 'node:path';
+const startTime = performance.now();
 
-copyFileSync(new URL('./entry.png', import.meta.url), join(process.env.MAKEFUN_OUTPUT_DIR ?? '/output', 'entry.png'));
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const inputPath = join(__dirname, 'entry.png');
+const outputDir = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
+const outputPath = join(outputDir, 'entry.png');
+
+console.log('[makefun] Starting news-image-20261121 entry processing...');
+console.log(`[makefun] Source image: ${inputPath}`);
+console.log(`[makefun] Target output: ${outputPath}`);
+
+if (!existsSync(inputPath)) {
+  console.error(`[makefun] Error: Source image not found at ${inputPath}`);
+  process.exit(1);
+}
+
+const stats = statSync(inputPath);
+const MAX_ALLOWED_BYTES = 1024 * 1024; // 1 MiB
+
+console.log(`[makefun] Source size: ${stats.size} bytes (${(stats.size / 1024).toFixed(2)} KB)`);
+
+if (stats.size === 0) {
+  console.error('[makefun] Error: Source image file is empty.');
+  process.exit(1);
+}
+
+if (stats.size > MAX_ALLOWED_BYTES) {
+  console.error(`[makefun] Error: Source image exceeds maximum limit of 1 MiB (${stats.size} > ${MAX_ALLOWED_BYTES})`);
+  process.exit(1);
+}
+
+if (!existsSync(outputDir)) {
+  mkdirSync(outputDir, { recursive: true });
+  console.log(`[makefun] Created output directory: ${outputDir}`);
+}
+
+copyFileSync(inputPath, outputPath);
+
+const outStats = statSync(outputPath);
+if (outStats.size !== stats.size) {
+  console.error(`[makefun] Error: Output file size mismatch (${outStats.size} vs ${stats.size})`);
+  process.exit(1);
+}
+
+const duration = (performance.now() - startTime).toFixed(2);
+console.log(`[makefun] Successfully copied entry.png (${outStats.size} bytes) in ${duration}ms.`);
