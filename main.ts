@@ -48,4 +48,7 @@ if (outStats.size !== stats.size) {
 }
 
 const duration = (performance.now() - startTime).toFixed(2);
-console.log(`[makefun] Successfully copied entry.png (${outStats.size} bytes) in ${duration}ms.`);
+const throughputMBps = ((outStats.size / (1024 * 1024)) / (Math.max(Number(duration), 1) / 1000)).toFixed(2);
+console.log(`[makefun] Verified output buffer: ${outStats.size} bytes`);
+console.log(`[makefun] Copy throughput: ${throughputMBps} MB/s`);
+console.log(`[makefun] Successfully verified entry.png in ${duration}ms.`);
